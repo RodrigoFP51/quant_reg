@@ -3,5 +3,6 @@
 
 ## Project NCEES
 
-the idea of thep project is to analyze and understand how the variables
-on the dataset drive the cost change in USA colleges.
+the idea of the project is to analyze and understand how the variables
+on the dataset drive the cost change in USA colleges through EDA and
+Quantile Regression.

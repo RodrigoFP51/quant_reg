@@ -1,0 +1,71 @@
+---
+title: "Dashboard of College Costs"
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      bg: "#cfe3db"
+      fg: "#044f31" 
+      primary: "#2be3be"
+      base_font:
+        google: Prompt
+      code_font:
+        google: JetBrains Mono
+    orientation: columns
+    vertical_layout: fill
+    
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(quantreg)
+library(tidyverse)
+library(dlookr)
+library(broom)
+library(DataExplorer)
+library(here)
+library(ggridges)
+
+bslib::bs_themer()
+
+custom_palette <- c("#9F4576", "#607B8B")
+
+data <- read_csv(here("Dados/nces330_20.csv"), col_types = "iccccd") %>%
+  rename(cost = "Value") %>%
+  rename_with(.fn = str_to_lower)
+```
+
+Column {data-width=650 .tabset}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+data %>% 
+  ggplot(aes(cost, type, fill = type)) +
+  ggridges::geom_density_ridges(scale = 0.8, alpha = 0.75) +
+  coord_flip() +
+  scale_fill_manual(values = c("#192D45", "#748CDB", "#163B88", "#C1DFF9"))
+```
+
+### Chart B
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart C
+
+```{r}
+
+```
+
+### Chart D
+
+```{r}
+
+```
+

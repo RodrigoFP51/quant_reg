@@ -21,18 +21,16 @@ data %>%
   select(where(is.character)) %>%
   map_dbl(n_distinct)
 
-summarize_data <- function(data, ...){
-  cols <- quos(...)
-
+summarize_data <- function(data){
   data %>%
-    group_by(!!!cols) %>%
     summarize(cost    = median(cost),
               n       = n(),
               .groups = "drop")
 }
 
 data %>%
-  summarize_data(year, expense) %>%
+  group_by(year, expense) %>%
+  summarize_data() %>%
   ggplot(aes(year, cost, color = expense)) +
   geom_line(linewidth = 1.2) +
   scale_color_manual(values = c("#9F4576", "#607B8B")) +
@@ -41,9 +39,10 @@ data %>%
   ggthemes::theme_hc()
 
 data %>%
-  summarize_data(year, length) %>%
-  ggplot(aes(year, cost, fill = length, color = length)) +
-  geom_area(linewidth = 1.2, alpha = 0.8) +
+  group_by(year, length) %>%
+  summarize_data() %>%
+  ggplot(aes(year, cost, fill = length)) +
+  geom_area(linewidth = 1.2, alpha = 0.8, color = "#f8e2f1") +
   scale_fill_manual(values = c("#9F4576", "#607B8B")) +
   scale_y_continuous(labels = scales::dollar) +
   scale_x_continuous(breaks = 2013:2021) +

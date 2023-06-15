@@ -23,10 +23,17 @@ data %>%
 
 summarize_data <- function(data){
   data %>%
-    summarize(cost    = median(cost),
-              n       = n(),
-              .groups = "drop")
+    summarize(mean_cost = median(cost),
+              n         = n(),
+              std_error = sd(cost) / sqrt(n()),
+              .groups   = "drop")
 }
+
+data %>%
+  ggplot(aes(cost, type, fill = type)) +
+  ggridges::geom_density_ridges(height = 1, alpha = 0.75) +
+  coord_flip() +
+  scale_fill_manual(values = c("#192D45", "#748CDB", "#163B88", "#C1DFF9"))
 
 data %>%
   group_by(year, expense) %>%
@@ -71,7 +78,8 @@ selected_states <- data %>%
 #   ggthemes::theme_hc()
 
 data %>%
-  summarize_data(year, state) %>%
+  group_by(year, state) %>%
+  summarize_data() %>%
   arrange(state, year) %>%
   group_by(state) %>%
   mutate(diff_perc = ((cost / lag(cost, 2021-2013)) - 1) * 100) %>%

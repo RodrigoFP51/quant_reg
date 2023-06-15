@@ -25,6 +25,7 @@ library(broom)
 library(DataExplorer)
 library(here)
 library(ggridges)
+library(shiny)
 
 bslib::bs_themer()
 
@@ -35,17 +36,34 @@ data <- read_csv(here("Dados/nces330_20.csv"), col_types = "iccccd") %>%
   rename_with(.fn = str_to_lower)
 ```
 
+Column {data-width=150 .sidebar}
+-----------------------------------------------------------------------
+```{r}
+selectInput("num_var", label = "Escolha a variável", choices = c("type", "length", "expense"), selected = "type")
+```
+
+
+
 Column {data-width=650 .tabset}
 -----------------------------------------------------------------------
 
 ### Chart A
 
 ```{r}
-data %>% 
-  ggplot(aes(cost, type, fill = type)) +
-  ggridges::geom_density_ridges(scale = 0.8, alpha = 0.75) +
-  coord_flip() +
-  scale_fill_manual(values = c("#192D45", "#748CDB", "#163B88", "#C1DFF9"))
+selectInput("num_var", label = "Escolha a variável", choices = c("type", "length", "expense"), selected = "type")
+
+renderPlot({
+  data %>% 
+  ggplot(aes(cost, input$num_var, fill = input$num_var)) +
+  ggridges::geom_density_ridges(scale = 0.8, alpha = 0.75, color = NA) +
+  geom_boxplot(width = 0.12, color = "white",
+               outlier.color = NA, size = 0.8) +
+  scale_x_continuous(labels = scales::dollar, n.breaks = 6) +
+  scale_fill_manual(values = c("#192D45", "#748CDB", "#163B88", "#C1DFF9")) +
+  labs(x='',y='', fill='')
+})
+
+
 ```
 
 ### Chart B
@@ -54,18 +72,4 @@ data %>%
 
 ```
 
-Column {data-width=350}
------------------------------------------------------------------------
-
-### Chart C
-
-```{r}
-
-```
-
-### Chart D
-
-```{r}
-
-```
 

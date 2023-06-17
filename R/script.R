@@ -23,7 +23,7 @@ data %>%
 
 summarize_data <- function(data){
   data %>%
-    summarize(mean_cost = median(cost),
+    summarize(mean_cost = mean(cost),
               n         = n(),
               std_error = sd(cost) / sqrt(n()),
               .groups   = "drop")
@@ -35,6 +35,20 @@ data %>%
   geom_boxplot(width = 0.12, color = "white",
                outlier.color = NA, size = 0.8) +
   scale_fill_manual(values = c("#192D45", "#748CDB", "#163B88", "#C1DFF9"))
+
+data %>%
+  group_by(year, length) %>%
+  summarize_data() %>%
+  ggplot(aes(year, mean_cost, color = length)) +
+  geom_line(linewidth = 0.8) +
+  geom_ribbon(aes(ymin = mean_cost - std_error,
+                  ymax = mean_cost + std_error,
+                  fill = length),
+              alpha = 0.2) +
+  scale_x_continuous(breaks = 2013:2021) +
+  scale_y_continuous(labels = scales::dollar) +
+  scale_color_manual(values = custom_palette) +
+  labs(x='', y='')
 
 data %>%
   group_by(year, expense) %>%

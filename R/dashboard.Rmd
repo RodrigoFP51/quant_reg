@@ -46,10 +46,14 @@ summarize_data <- function(data){
 
 ```
 
+Graphs
+=====================================
+
 Column {data-width=250 .sidebar}
 -----------------------------------------------------------------------
 ```{r}
-selectInput("cat_var", label = "Escolha a variável", 
+selectInput("cat_var",
+            label = "Escolha a variável", 
             choices = c("type", "length", "expense"), 
             selected = "type")
 ```
@@ -77,7 +81,8 @@ renderPlot({
                show.legend = FALSE) +
   scale_x_continuous(labels = scales::dollar, n.breaks = 6) +
   scale_fill_manual(values = custom_palette) +
-  labs(x='',y='', fill='')
+  labs(x='',y='', fill='') + 
+  ggthemes::theme_hc()
 })
 
 
@@ -101,8 +106,23 @@ renderPlot({
   scale_color_manual(values = custom_palette) +
   scale_fill_manual(values = custom_palette) +
   theme(legend.position = "bottom") +
-  labs(x='', y='') 
+  labs(x='', y='') +
+  ggthemes::theme_hc()
 })
 ```
+
+Regression Analysis
+=====================================
+
+
+
+
+
+
+
+
+
+
+
 
 

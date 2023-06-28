@@ -6,41 +6,45 @@ library(dlookr)
 library(broom)
 library(DataExplorer)
 library(here)
+library(gt)
+library(gtExtras)
+
+custom_palette <- c("#192D45", "#748CDB", "#163B88", "#C1DFF9")
 
 data <- read_csv(here("Dados/nces330_20.csv"), col_types = "iccccd") %>%
   rename(cost = "Value") %>%
   rename_with(.fn = str_to_lower)
 
-data %>%
-  plot_histogram()
-
-data %>%
-  skimr::skim()
-
-data %>%
-  select(where(is.character)) %>%
-  map_dbl(n_distinct)
-
 summarize_data <- function(data){
   data %>%
-    summarize(mean_cost = mean(cost),
-              n         = n(),
-              std_error = sd(cost) / sqrt(n()),
-              .groups   = "drop")
+    summarize(mean_cost  = mean(cost),
+              total_cost = sum(cost),
+              n          = n(),
+              std_error  = sd(cost) / sqrt(n()),
+              .groups    = "drop")
 }
+
 
 data %>%
   ggplot(aes(cost, length, fill = length)) +
-  ggridges::geom_density_ridges(height = 1, alpha = 0.75, color = NA) +
-  geom_boxplot(width = 0.12, color = "white",
+  #ggridges::geom_density_ridges(height = 1, alpha = 0.75, color = NA) +
+  ggdist::stat_halfeye(aes(fill = length),
+                       adjust = 0.75,
+                       point_color = NA, justification = -0.1) +
+  geom_boxplot(width = 0.12, color = "black",
                outlier.color = NA, size = 0.8) +
+  stat_summary(fun = "sd", geom = "text",
+               aes(label = after_stat(str_c("SD = ", round(x)))),
+               hjust = 0, vjust = -2.5, fontface = "bold", color = "white") +
   scale_fill_manual(values = c("#192D45", "#748CDB", "#163B88", "#C1DFF9"))
+
 
 data %>%
   group_by(year, length) %>%
   summarize_data() %>%
   ggplot(aes(year, mean_cost, color = length)) +
   geom_line(linewidth = 0.8) +
+  geom_point(size = 3) +
   geom_ribbon(aes(ymin = mean_cost - std_error,
                   ymax = mean_cost + std_error,
                   fill = length),
@@ -48,7 +52,14 @@ data %>%
   scale_x_continuous(breaks = 2013:2021) +
   scale_y_continuous(labels = scales::dollar) +
   scale_color_manual(values = custom_palette) +
-  labs(x='', y='')
+  labs(x='', y='') +
+  ggthemes::theme_hc()
+
+data %>%
+  ggplot(aes(cost, type, fill = type)) +
+  ggridges::geom_density_ridges(height = 1, alpha = 0.75) +
+  coord_flip() +
+  scale_fill_manual(values = c("#192D45", "#748CDB", "#163B88", "#C1DFF9"))
 
 data %>%
   group_by(year, expense) %>%
@@ -57,7 +68,7 @@ data %>%
   geom_line(linewidth = 1.2) +
   scale_color_manual(values = c("#9F4576", "#607B8B")) +
   scale_y_continuous(labels = scales::dollar) +
-  scale_x_continuous(breaks = 2013:2021)+
+  scale_x_continuous(breaks = 2013:2021) +
   ggthemes::theme_hc()
 
 data %>%
@@ -81,6 +92,37 @@ selected_states <- data %>%
   head(15) %>%
   pull(state)
 
+data %>%
+  group_by(year, state) %>%
+  #summarize_data() %>%
+  summarize(total_cost = sum(cost),
+            .groups = "drop") %>%
+  arrange(state, year) %>%
+  filter(year %in% c(2013, 2021)) %>%
+  pivot_wider(id_cols = c(state),
+              names_from = year,
+              values_from = total_cost) %>%
+  mutate(diff_perc = ((`2021` / `2013`) - 1) * 100) %>%
+  bind_cols(
+    data %>%
+      group_by(year, state) %>%
+      summarize(total_cost = sum(cost),
+                cost_data = list(cost),
+                .groups = "drop") %>%
+      filter(year %in% c(2013,2021)) %>%
+      select(cost_data)
+  ) %>%
+  slice_max(diff_perc, n = 15) %>%
+  gt() %>%
+  gtExtras::gt_plt_sparkline(cost_data) %>%
+  cols_label(state = "State",
+             diff_perc = "% Change") %>%
+  fmt_currency(columns = c(`2013`, `2021`),
+               use_subunits = FALSE) %>%
+  fmt_percent(columns = "diff_perc",
+              scale_values = FALSE)
+
+
 # data %>%
 #   filter(state %in% selected_states) %>%
 #   summarize_data(year, state) %>%
@@ -97,10 +139,10 @@ data %>%
   summarize_data() %>%
   arrange(state, year) %>%
   group_by(state) %>%
-  mutate(diff_perc = ((cost / lag(cost, 2021-2013)) - 1) * 100) %>%
+  mutate(diff_perc = ((total_cost / lag(total_cost, 2021-2013)) - 1) * 100) %>%
   drop_na() %>%
   ungroup() %>%
-  slice_max(diff_perc, n = 20) %>%
+  slice_min(diff_perc, n = 10) %>%
   mutate(state = fct_reorder(state, diff_perc),
          perc = glue::glue("{round(diff_perc,2)}%")) %>%
   ggplot(aes(state, diff_perc)) +

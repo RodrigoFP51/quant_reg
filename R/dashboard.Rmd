@@ -26,8 +26,7 @@ library(DataExplorer)
 library(here)
 library(ggridges)
 library(shiny)
-
-bslib::bs_themer()
+library(gt)
 
 custom_palette <- c("#192D45", "#748CDB", "#163B88", "#C1DFF9")
 
@@ -37,10 +36,11 @@ data <- read_csv(here("Dados/nces330_20.csv"), col_types = "iccccd") %>%
 
 summarize_data <- function(data){
   data %>%
-    summarize(mean_cost = mean(cost),
-              n         = n(),
-              std_error = sd(cost) / sqrt(n()),
-              .groups   = "drop")
+    summarize(mean_cost  = mean(cost),
+              total_cost = sum(cost),
+              n          = n(),
+              std_error  = sd(cost) / sqrt(n()),
+              .groups    = "drop")
 }
 
 
@@ -53,11 +53,14 @@ Column {data-width=250 .sidebar}
 -----------------------------------------------------------------------
 ```{r}
 selectInput("cat_var",
-            label = "Escolha a variável", 
+            label = "Choose a variable", 
             choices = c("type", "length", "expense"), 
             selected = "type")
-```
 
+# selectInput("colleges", label = "just choose",
+#             choices = c("Biggest variation", "Smallest variation"),
+#             selected = "Biggest variation")
+```
 
 
 Column {data-width=650 .tabset}
@@ -69,16 +72,19 @@ Column {data-width=650 .tabset}
 renderPlot({
   data %>% 
   ggplot(aes(cost, .data[[input$cat_var]], fill = .data[[input$cat_var]])) +
-  ggridges::geom_density_ridges(scale = 0.8,
-                                alpha = 0.75, 
-                                color = NA,
-                                show.legend = FALSE) +
+  ggdist::stat_halfeye(aes(fill = .data[[input$cat_var]]),
+                       adjust = 0.75, 
+                       point_color = NA, 
+                       justification = -0.1) +
   geom_boxplot(width = 0.11, 
                color = "black",
                alpha = 0.5,
                outlier.color = NA,
                size = 0.8, 
                show.legend = FALSE) +
+  stat_summary(fun = "sd", geom = "text",
+               aes(label = after_stat(str_c("SD: ", round(x)))),
+               hjust = 0, vjust = -2.5, fontface = "bold", color = "black") +
   scale_x_continuous(labels = scales::dollar, n.breaks = 6) +
   scale_fill_manual(values = custom_palette) +
   labs(x='',y='', fill='') + 
@@ -97,6 +103,7 @@ renderPlot({
   summarize_data() %>% 
   ggplot(aes(year, mean_cost, color = .data[[input$cat_var]])) +
   geom_line(linewidth = 0.8) +
+  geom_point(size = 3) +
   geom_ribbon(aes(ymin = mean_cost - std_error,
                   ymax = mean_cost + std_error, 
                   fill = .data[[input$cat_var]]), 
@@ -111,13 +118,36 @@ renderPlot({
 })
 ```
 
+### Chart C
+
+```{r}
+renderTable({
+  data %>%
+    group_by(year, state) %>%
+    #summarize_data() %>%
+    summarize(total_cost = sum(cost),
+              .groups = "drop") %>%
+    arrange(state, year) %>%
+    filter(year %in% c(2013, 2021)) %>%
+    pivot_wider(id_cols = c(state),
+                names_from = year,
+                values_from = total_cost) %>%
+    mutate(diff_perc = ((`2021` / `2013`) - 1) * 100) %>%
+    arrange(desc(diff_perc)) %>% 
+    #slice_max(diff_perc, n = 15) %>%
+    gt() %>%
+    cols_label(state = "State",
+               diff_perc = "% Change") %>%
+    fmt_currency(columns = c(`2013`, `2021`),
+                 use_subunits = FALSE) %>%
+    fmt_percent(columns = "diff_perc",
+                scale_values = FALSE)
+})
+```
+
+
 Regression Analysis
 =====================================
-
-
-
-
-
 
 
 

@@ -175,6 +175,10 @@ data %>%
 ### Quantile regression
 lm_mod <- lm(cost ~ length + expense,
              data = data)
+lm_coefs <- tidy(lm_mod) %>%
+  slice(-1) %>%
+  select(estimate, std.error)
+
 summary(lm_mod)
 
 qr <- rq(cost ~ length + expense,
@@ -185,9 +189,12 @@ tidy(qr) %>%
   filter(!str_detect(term, "Inter")) %>%
   ggplot(aes(tau, estimate)) +
   geom_point(size = 1.8, color = "#9F4576") +
-  geom_line(size = 1, color = "#9F4576") +
+  geom_line(linewidth = 1, color = "#9F4576") +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
               alpha = 0.1, color = "#607B8B") +
+  geom_hline(data = lm_coefs,
+             aes(yintercept = estimate)
+             ) +
   facet_wrap(vars(term), scales = "free", ncol = 1)
 
 

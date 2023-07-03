@@ -1,0 +1,15 @@
+.chart-shim {
+      overflow: auto;
+}
+
+body {
+   background-image: linear-gradient(to right bottom, #20d7f2, #00d2d9, #00ccb5, #00c48a, #00b958);
+}
+
+div.navbar {
+  background-color: #00b958
+}
+
+div#section-column-1 {
+  background-color: #00b958
+}

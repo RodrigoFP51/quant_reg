@@ -82,10 +82,11 @@ data %>%
   ggthemes::theme_hc()
 
 selected_states <- data %>%
-  summarize_data(year, state) %>%
+  group_by(year, state) %>%
+  summarize_data() %>%
   arrange(state, year) %>%
   group_by(state) %>%
-  summarize(diff_perc = ((cost / lag(cost, 2021-2013)) - 1) * 100) %>%
+  summarize(diff_perc = ((total_cost / lag(total_cost, 2021-2013)) - 1) * 100) %>%
   #mutate(diff_perc = ((cost / lag(cost, 2021-2013)) - 1) * 100) %>%
   drop_na() %>%
   arrange(desc(diff_perc)) %>%
@@ -160,11 +161,11 @@ data %>%
   filter(state %in% selected_states) %>%
   mutate(state = fct_reorder(state, cost)) %>%
   ggplot(aes(state, cost)) +
-  geom_boxplot(alpha = 0.25, outlier.color = NA, width = 0.45) +
+  #geom_boxplot(alpha = 0.25, outlier.color = NA, width = 0.45) +
   geom_jitter(alpha = 0.25, color = "#9F4576", width = 0.25) +
-  geom_hline(yintercept = median(data$cost), lty = 2, size = 1) +
+  geom_hline(yintercept = mean(data$cost), lty = 2, size = 1) +
   scale_y_continuous(labels = scales::dollar) +
-  #geom_segment(aes(y = median(data$cost), yend = cost, xend = cost)) +
+  geom_segment(aes(y = median(data$cost), yend = cost, xend = cost)) +
   stat_summary(geom = "point",
                fun = "mean",
                size = 5, pch = 21, fill = "#607B8B") +

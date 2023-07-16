@@ -23,7 +23,7 @@ library(dlookr)
 library(broom)
 library(DataExplorer)
 library(here)
-library(ggridges)
+library(ggdist)
 library(shiny)
 library(gt)
 
@@ -54,21 +54,23 @@ body {
   background-image: linear-gradient(to bottom, #367feb, #3870f2, #4c5df5, #6744f3, #8312eb);
 }
 
-a..nav-link{
-  color: #8312eb;
+a.tab-item {
+  color: #4c5df5;
 }
 
 ```
 
 
-# Graphs
+# Data Analysis
 
-## Column {.sidebar data-width="250"}
+## Column {.sidebar data-width="200"}
 
 ```{r}
 selectInput("cat_var",
             label = "Choose a variable", 
-            choices = c("type", "length", "expense"), 
+            choices = c("Type" = "type",
+                        "Length" = "length",
+                        "Expense" = "expense"), 
             selected = "type")
 
 # selectInput("colleges", label = "just choose",
@@ -78,14 +80,14 @@ selectInput("cat_var",
 
 ## Column {.tabset data-width="650"}
 
-### Variables Distributions
+### Variable Distribution
 
 ```{r}
 renderPlot({
   data %>% 
   ggplot(aes(cost, .data[[input$cat_var]], fill = .data[[input$cat_var]])) +
   ggdist::stat_halfeye(aes(fill = .data[[input$cat_var]]),
-                       adjust = 1.2, 
+                       adjust = 2.2, 
                        point_color = NA, 
                        justification = -0.1) +
   geom_boxplot(width = 0.11, 
@@ -96,8 +98,9 @@ renderPlot({
                show.legend = FALSE) +
   stat_summary(fun = "sd", geom = "text",
                aes(label = after_stat(str_c("SD: ", round(x)))),
-               hjust = 0, vjust = -2.5, fontface = "bold", color = "black") +
-  scale_x_continuous(labels = scales::dollar, n.breaks = 6) +
+               hjust = 3, vjust = 0, fontface = "bold", color = "black") +
+  scale_x_continuous(labels = scales::dollar,
+                     n.breaks = 6) +
   scale_fill_manual(values = custom_palette) +
   labs(x='',y='', fill='') + 
   ggthemes::theme_hc()
@@ -133,6 +136,16 @@ renderPlot({
 ### Period Variation
 
 ```{r}
+plots <- data %>% 
+  nest(data = -(state)) %>% 
+  mutate(data = map(data, \(x) {
+    x %>%
+      group_by(year) %>%
+      summarize_data() %>% 
+      pull(total_cost)
+  }
+  ))
+
 data %>%
   group_by(year, state) %>%
   summarize_data() %>%
@@ -145,11 +158,19 @@ data %>%
               values_from = total_cost) %>%
   mutate(diff_perc = ((`2021` / `2013`) - 1) * 100) %>%
   arrange(desc(diff_perc)) %>% 
+  inner_join(plots, by = "state") %>% 
   gt() %>%
+  gtExtras::gt_plt_sparkline(data, 
+                             fig_dim = c(7,30),
+                             label = FALSE) %>% 
+  gtExtras::gt_color_box(columns = diff_perc,
+                         domain = 0.1:1,
+                         palette = "ggsci::blue_material") %>% 
   tab_header(title = "Cost variation in all U.S States",
              subtitle = "2013-2021") %>% 
   cols_label(state = "State",
-             diff_perc = "% Change") %>%
+             diff_perc = "% Change",
+             data = "Trend") %>%
   fmt_currency(columns = c(`2013`, `2021`),
                use_subunits = FALSE) %>%
   fmt_percent(columns = "diff_perc",

@@ -54,6 +54,10 @@ body {
   background-image: linear-gradient(to bottom, #367feb, #3870f2, #4c5df5, #6744f3, #8312eb);
 }
 
+a..nav-link{
+  color: #8312eb;
+}
+
 ```
 
 
@@ -142,7 +146,8 @@ data %>%
   mutate(diff_perc = ((`2021` / `2013`) - 1) * 100) %>%
   arrange(desc(diff_perc)) %>% 
   gt() %>%
-  tab_header(title = "Period Variation from 2013 to 2021 in all U.S States.") %>% 
+  tab_header(title = "Cost variation in all U.S States",
+             subtitle = "2013-2021") %>% 
   cols_label(state = "State",
              diff_perc = "% Change") %>%
   fmt_currency(columns = c(`2013`, `2021`),
@@ -150,7 +155,7 @@ data %>%
   fmt_percent(columns = "diff_perc",
               scale_values = FALSE) %>% 
   data_color(columns = c(`2013`, `2021`), 
-             palette = c("#0c6d7c", "#00878d", "#00a294", "#16bb93", "#59d489"),
+             palette = "Purples",
              method = "numeric") 
 
 ```

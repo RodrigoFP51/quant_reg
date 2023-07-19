@@ -1,0 +1,13 @@
+name: CollegeCostsDashboard
+title: CollegeCostsDashboard
+username:
+account: rodrigo-pizzinato
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9475892
+bundleId: 7472941
+url: https://rodrigo-pizzinato.shinyapps.io/CollegeCostsDashboard/
+when: 1689724254.97877
+lastSyncTime: 1689724254.97877
+asMultiple: FALSE
+asStatic: FALSE

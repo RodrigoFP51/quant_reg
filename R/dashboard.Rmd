@@ -54,6 +54,10 @@ body {
   background-image: linear-gradient(to bottom, #367feb, #3870f2, #4c5df5, #6744f3, #8312eb);
 }
 
+div#section-column-1 {
+  box-shadow: 3px 3px 5px #abf;
+}
+
 a.tab-item {
   color: #4c5df5;
 }
@@ -137,14 +141,21 @@ renderPlot({
 
 ```{r}
 plots <- data %>% 
-  nest(data = -(state)) %>% 
-  mutate(data = map(data, \(x) {
-    x %>%
-      group_by(year) %>%
-      summarize_data() %>% 
-      pull(total_cost)
-  }
-  ))
+  group_by(state, year) %>% 
+  summarize_data() %>% 
+  select(state, total_cost) %>% 
+  nest(data = -state) %>% 
+  mutate(data = map(data, \(x) pull(x)))
+  # nest(data = -(state)) %>% 
+  # mutate(data = map(data, \(x) {
+  #   x %>%
+  #     group_by(year) %>%
+  #     summarize_data() %>% 
+  #     pull(total_cost)
+  # }
+  # ))
+
+my_cols <- colorRampPalette(c("#c993fa", "#8312eb"))
 
 data %>%
   group_by(year, state) %>%
@@ -163,9 +174,6 @@ data %>%
   gtExtras::gt_plt_sparkline(data, 
                              fig_dim = c(7,30),
                              label = FALSE) %>% 
-  gtExtras::gt_color_box(columns = diff_perc,
-                         domain = 0.1:1,
-                         palette = "ggsci::blue_material") %>% 
   tab_header(title = "Cost variation in all U.S States",
              subtitle = "2013-2021") %>% 
   cols_label(state = "State",
@@ -175,9 +183,9 @@ data %>%
                use_subunits = FALSE) %>%
   fmt_percent(columns = "diff_perc",
               scale_values = FALSE) %>% 
-  data_color(columns = c(`2013`, `2021`), 
-             palette = "Purples",
-             method = "numeric") 
+  data_color(columns = c(`2013`, `2021`),
+             palette = my_cols(35),
+             method = "numeric")
 
 ```
 

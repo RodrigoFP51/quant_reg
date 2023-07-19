@@ -89,8 +89,8 @@ selected_states <- data %>%
   summarize(diff_perc = ((total_cost / lag(total_cost, 2021-2013)) - 1) * 100) %>%
   #mutate(diff_perc = ((cost / lag(cost, 2021-2013)) - 1) * 100) %>%
   drop_na() %>%
-  arrange(desc(diff_perc)) %>%
-  head(15) %>%
+  arrange(diff_perc) %>%
+  head(10) %>%
   pull(state)
 
 data %>%
@@ -159,19 +159,40 @@ data %>%
 
 data %>%
   filter(state %in% selected_states) %>%
-  mutate(state = fct_reorder(state, cost)) %>%
-  ggplot(aes(state, cost)) +
-  #geom_boxplot(alpha = 0.25, outlier.color = NA, width = 0.45) +
-  geom_jitter(alpha = 0.25, color = "#9F4576", width = 0.25) +
-  geom_hline(yintercept = mean(data$cost), lty = 2, size = 1) +
+  mutate(state = fct_reorder(state, cost, mean)) %>%
+  ggplot(aes(state, cost, color = state, fill = state)) +
+  geom_jitter(alpha = 0.25, width = 0.25) +
+  geom_hline(yintercept = mean(data$cost),
+             size = 1, color = "gray70") +
   scale_y_continuous(labels = scales::dollar) +
-  geom_segment(aes(y = median(data$cost), yend = cost, xend = cost)) +
+  geom_segment(aes(x = state, xend = state,
+                   y = cost, yend = mean(data$cost))) +
   stat_summary(geom = "point",
                fun = "mean",
-               size = 5, pch = 21, fill = "#607B8B") +
-  coord_flip() +
-  ggthemes::theme_hc() +
+               size = 5) +
+  ggsci::scale_color_simpsons() +
+  #coord_flip() +
+  theme_minimal() +
+  theme(legend.position = "none") +
   labs(x='', y='')
+
+plots <- data %>%
+  nest(data = -(state)) %>%
+  mutate(data = map(data, \(x) {
+    x %>%
+      group_by(year) %>%
+      summarize(cost = sum(cost)) %>%
+      pull(cost)
+  }
+  ))
+  # mutate(plot = map2(state, data, function(var, df){
+  #   df %>%
+  #     group_by(year) %>%
+  #     summarize(cost = sum(cost)) %>%
+  #     ggplot(aes(year, cost)) +
+  #     geom_line(linewidth = 1) +
+  #     theme_void()
+  # }))
 
 ### Quantile regression
 lm_mod <- lm(cost ~ length + expense,

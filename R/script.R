@@ -197,9 +197,9 @@ plots <- data %>%
 ### Quantile regression
 lm_mod <- lm(cost ~ length + expense,
              data = data)
-lm_coefs <- tidy(lm_mod) %>%
+lm_coefs <- tidy(lm_mod, conf.int = TRUE) %>%
   slice(-1) %>%
-  select(estimate, std.error)
+  select(term, estimate, conf.low, conf.high)
 
 summary(lm_mod)
 
@@ -207,17 +207,33 @@ qr <- rq(cost ~ length + expense,
          data = data,
          tau = seq(0.1, 0.9, 0.1))
 
-tidy(qr) %>%
+models <- tidy(qr) %>%
+  mutate(model = "qr") %>%
   filter(!str_detect(term, "Inter")) %>%
+  bind_rows(lm_coefs %>%
+              select(term, estimate, conf.low, conf.high) %>%
+              mutate(model = "lm"))
+models %>%
   ggplot(aes(tau, estimate)) +
-  geom_point(size = 1.8, color = "#9F4576") +
-  geom_line(linewidth = 1, color = "#9F4576") +
+  facet_wrap(vars(term), scales = "free", ncol = 1) +
+  geom_point(size = 1.8, color = custom_palette[3]) +
+  geom_line(linewidth = 1, color = custom_palette[3]) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
-              alpha = 0.1, color = "#607B8B") +
-  geom_hline(data = lm_coefs,
-             aes(yintercept = estimate)
-             ) +
-  facet_wrap(vars(term), scales = "free", ncol = 1)
+              alpha = 0.1, color = custom_palette[2]) +
+  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "length")),
+             aes(yintercept = estimate), lty = 2)  +
+  annotate(geom = "rect", xmin = -Inf, xmax = Inf,
+           ymin = filter(models, model == "lm", str_detect(term, "length"))[["conf.low"]],
+           ymax = filter(models, model == "lm", str_detect(term, "length"))[["conf.high"]],
+           alpha = 0.25, fill = custom_palette[3]) +
+  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "expense")),
+             aes(yintercept = estimate), lty = 2)  +
+  annotate(geom = "rect", xmin = -Inf, xmax = Inf,
+           ymin = filter(models, model == "lm", str_detect(term, "expense"))[["conf.low"]],
+           ymax = filter(models, model == "lm", str_detect(term, "expense"))[["conf.high"]],
+           alpha = 0.25, fill = custom_palette[3])
+  # geom_ribbon(data = models %>% filter(model == "lm", str_detect(term, "length")),
+  #             aes(ymin = conf.low, ymax = conf.high))
 
 
 

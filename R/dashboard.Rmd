@@ -35,13 +35,17 @@ data <- read_csv(here("Dados/nces330_20.csv"), col_types = "iccccd") %>%
 
 summarize_data <- function(data){
   data %>%
-    summarize(mean_cost  = mean(cost),
-              total_cost = sum(cost),
-              n          = n(),
-              std_error  = sd(cost) / sqrt(n()),
-              .groups    = "drop")
+    summarize(mean_cost   = mean(cost),
+              total_cost  = sum(cost),
+              n           = n(),
+              std_error   = sd(cost) / sqrt(n()),
+              upper_bound = mean_cost + 1.96 * std_error,
+              lower_bound = mean_cost - 1.96 * std_error,
+              .groups     = "drop")
 }
 
+## 
+##
 
 ```
 
@@ -56,6 +60,7 @@ body {
 
 div#section-column-1 {
   box-shadow: 3px 3px 5px #abf;
+  border-radius: 0px 0px 10px 10px;
 }
 
 a.tab-item {
@@ -76,10 +81,6 @@ selectInput("cat_var",
                         "Length" = "length",
                         "Expense" = "expense"), 
             selected = "type")
-
-# selectInput("colleges", label = "just choose",
-#             choices = c("Biggest variation", "Smallest variation"),
-#             selected = "Biggest variation")
 ```
 
 ## Column {.tabset data-width="650"}
@@ -90,7 +91,7 @@ selectInput("cat_var",
 renderPlot({
   data %>% 
   ggplot(aes(cost, .data[[input$cat_var]], fill = .data[[input$cat_var]])) +
-  ggdist::stat_halfeye(aes(fill = .data[[input$cat_var]]),
+  stat_halfeye(aes(fill = .data[[input$cat_var]]),
                        adjust = 2.2, 
                        point_color = NA, 
                        justification = -0.1) +
@@ -123,8 +124,8 @@ renderPlot({
   ggplot(aes(year, mean_cost, color = .data[[input$cat_var]])) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 3) +
-  geom_ribbon(aes(ymin = mean_cost + std_error,
-                  ymax = mean_cost - std_error, 
+  geom_ribbon(aes(ymin = lower_bound,
+                  ymax = upper_bound, 
                   fill = .data[[input$cat_var]]), 
               alpha = 0.1) +
   scale_x_continuous(breaks = 2013:2021) +
@@ -132,7 +133,8 @@ renderPlot({
   scale_color_manual(values = custom_palette) +
   scale_fill_manual(values = custom_palette) +
   theme(legend.position = "bottom") +
-  labs(x='', y='') +
+  labs(x='', y='',
+       title = "Mean College Costs") +
   ggthemes::theme_hc()
 })
 ```
@@ -190,3 +192,8 @@ data %>%
 ```
 
 # Regression Analysis
+
+```{r}
+
+```
+

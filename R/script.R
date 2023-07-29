@@ -241,20 +241,6 @@ models %>%
     strip.background = element_rect(fill = custom_palette[4], linewidth = 1),
     strip.text = element_text(face = "bold", color = custom_palette[1])
     )
-  # annotate(geom = "rect", xmin = -Inf, xmax = Inf,
-  #          ymin = filter(models, model == "lm", str_detect(term, "expense"))[["conf.low"]],
-  #          ymax = filter(models, model == "lm", str_detect(term, "expense"))[["conf.high"]],
-  #          alpha = 0.25, fill = custom_palette[3])
-
-rsample::bootstraps(data, times = 200) %>%
-  mutate(mean = map(splits,
-                    function(x){
-                      df <- rsample::analysis(x)
-                      mean(df$cost)
-                    })) %>%
-  unnest(mean) %>%
-  pull(mean)
-
 
 
 

@@ -92,18 +92,18 @@ renderPlot({
   data %>% 
   ggplot(aes(cost, .data[[input$cat_var]], fill = .data[[input$cat_var]])) +
   stat_halfeye(aes(fill = .data[[input$cat_var]]),
-                       adjust = 2.2, 
-                       point_color = NA, 
-                       justification = -0.1) +
+               adjust = 2.2,
+               point_color = NA,
+               justification = -0.1) +
   geom_boxplot(width = 0.11, 
                color = "black",
                alpha = 0.5,
                outlier.color = NA,
                size = 0.8, 
                show.legend = FALSE) +
-  stat_summary(fun = "sd", geom = "text",
-               aes(label = after_stat(str_c("SD: ", round(x)))),
-               hjust = 3, vjust = 0, fontface = "bold", color = "black") +
+  # stat_summary(fun = "sd", geom = "text",
+  #              aes(label = after_stat(glue::glue("Std. Dev: {sd}"))),
+  #              hjust = 3, vjust = 0, fontface = "bold", color = "black") +
   scale_x_continuous(labels = scales::dollar,
                      n.breaks = 6) +
   scale_fill_manual(values = custom_palette) +
@@ -132,7 +132,8 @@ renderPlot({
   scale_y_continuous(labels = scales::dollar) +
   scale_color_manual(values = custom_palette) +
   scale_fill_manual(values = custom_palette) +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "bottom",
+        legend.justification = c(0.5,0.5)) +
   labs(x='', y='',
        title = "Mean College Costs") +
   ggthemes::theme_hc()

@@ -33,10 +33,14 @@ higher costs than 2-year (Associates) programs.
 
 - There is a significant difference for all the coefficients in
   comparison to the linear regression.  
-- For low cost colleges, the Room/Board expenses tends are pretty much
-  equal to Fees/Tuition, while LR estimate it to be, in average, 10k
-  cheaper.  
+- For low cost colleges, the Room/Board expenses are pretty much equal
+  to Fees/Tuition, while LR estimate it to be, in average, 10k cheaper.
+  But, as the overall costs increase, the expenses with Room/Board tend
+  to be lower than with Fees/Tuition.  
 - 4-year programs are at least 5k more expensive than 2-year programs.
   But, for more expensive colleges, these programs tend to be way more
   expensive too, reaching 20k more.  
-- 
+- Public in-state and out-of-state colleges are in fact less expensive
+  than the private ones. The plot also shows that cheaper public
+  out-of-state college don’t have too much difference in costs compared
+  to the private colleges.

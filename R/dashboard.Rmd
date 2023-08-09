@@ -11,6 +11,7 @@ output:
     orientation: columns
     vertical_layout: fill
     
+chunk_output_type: console
 
 runtime: shiny
 ---
@@ -133,7 +134,8 @@ renderPlot({
   scale_color_manual(values = custom_palette) +
   scale_fill_manual(values = custom_palette) +
   theme(legend.position = "bottom",
-        legend.justification = c(0.5,0.5)) +
+        legend.justification = c(0.5,0.5),
+        legend.title = element_blank()) +
   labs(x='', y='',
        title = "Mean College Costs") +
   ggthemes::theme_hc()
@@ -170,6 +172,7 @@ data %>%
   pivot_wider(id_cols = c(state),
               names_from = year,
               values_from = total_cost) %>%
+  mutate(diff = `2021` - `2013`) %>% 
   mutate(diff_perc = ((`2021` / `2013`) - 1) * 100) %>%
   arrange(desc(diff_perc)) %>% 
   inner_join(plots, by = "state") %>% 
@@ -180,9 +183,10 @@ data %>%
   tab_header(title = "Cost variation in all U.S States",
              subtitle = "2013-2021") %>% 
   cols_label(state = "State",
+             diff = "Variation",
              diff_perc = "% Change",
              data = "Trend") %>%
-  fmt_currency(columns = c(`2013`, `2021`),
+  fmt_currency(columns = c(`2013`, `2021`, diff),
                use_subunits = FALSE) %>%
   fmt_percent(columns = "diff_perc",
               scale_values = FALSE) %>% 
@@ -195,15 +199,20 @@ data %>%
 # Regression Analysis
 
 ```{r}
-lm_mod <- lm(cost ~ length + expense + type,
-             data = data)
+lm_mod <- data %>% 
+  mutate(type = fct_relevel(type, "Private")) %>% 
+  lm(cost ~ length + expense + type,
+             data = .)
+
 lm_coefs <- tidy(lm_mod, conf.int = TRUE) %>%
   slice(-1) %>%
   select(term, estimate, conf.low, conf.high)
 
-qr <- rq(cost ~ length + expense + type,
-         data = data,
-         tau = seq(0.1, 0.9, 0.1))
+qr <- data %>% 
+  mutate(type = fct_relevel(type, "Private")) %>% 
+  rq(cost ~ length + expense + type,
+         data = .,
+         tau = seq(0.05, 0.9, 0.05))
 
 models <- tidy(qr) %>%
   mutate(model = "qr") %>%
@@ -211,6 +220,7 @@ models <- tidy(qr) %>%
   bind_rows(lm_coefs %>%
               select(term, estimate, conf.low, conf.high) %>%
               mutate(model = "lm")) 
+
 renderPlot({
   models %>%
   ggplot(aes(tau, estimate)) +
@@ -236,12 +246,14 @@ renderPlot({
   scale_x_continuous(breaks = seq(0,1,0.1)) +
   scale_y_continuous(labels = scales::dollar_format(scale = 1e-3, suffix = "K")) +
   labs(x='Quantile', y='Estimate',
-       title = "Quantitle Regression Plot",
+       title = "Quantitle Regression Coefficients",
        subtitle = "Dashed line indicates linear regression coefficient") +
   ggthemes::theme_hc() +
   theme(
     strip.background = element_rect(fill = custom_palette[4], linewidth = 1),
-    strip.text = element_text(face = "bold", color = custom_palette[1])
+    strip.text = element_text(face = "bold", color = custom_palette[1]),
+    plot.title = element_text(colour = custom_palette[1], hjust = 0.5),
+    plot.subtitle = element_text(colour = custom_palette[1], hjust = 0.5)
     )
 })
 

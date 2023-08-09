@@ -212,9 +212,11 @@ models <- tidy(qr) %>%
   filter(!str_detect(term, "Inter")) %>%
   bind_rows(lm_coefs %>%
               select(term, estimate, conf.low, conf.high) %>%
-              mutate(model = "lm"))
+              mutate(model = "lm")) %>%
+  mutate(term = str_detect("^(type|expense|length)"))
 models %>%
   ggplot(aes(tau, estimate)) +
+<<<<<<< HEAD
   facet_wrap(vars(term),
              scales = "free",
              ncol = 2) +
@@ -222,11 +224,17 @@ models %>%
              color = custom_palette[3]) +
   geom_line(linewidth = 1,
             color = custom_palette[3]) +
+=======
+  facet_wrap(vars(term), scales = "free", ncol = 2) +
+  geom_point(size = 1.8, color = custom_palette[3]) +
+  geom_line(linewidth = 1, color = custom_palette[3]) +
+>>>>>>> aa3db4fa9f476c3ebbfd6462fd3763520bc4c636
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
               alpha = 0.25,
               color = custom_palette[2],
               fill = custom_palette[2]) +
   geom_hline(data = models %>% filter(model == "lm", str_detect(term, "length")),
+<<<<<<< HEAD
              aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3]) +
   geom_hline(data = models %>% filter(model == "lm", str_detect(term, "expense")),
              aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3]) +
@@ -241,6 +249,26 @@ models %>%
     strip.background = element_rect(fill = custom_palette[4], linewidth = 1),
     strip.text = element_text(face = "bold", color = custom_palette[1])
     )
+=======
+             aes(yintercept = estimate), lty = 2, size = 1, color = "gray60") +
+  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "expense")),
+             aes(yintercept = estimate), lty = 2, size = 1, color = "gray60") +
+  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "In-State")),
+             aes(yintercept = estimate), lty = 2, size = 1, color = "gray60") +
+  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "Out-of-State")),
+             aes(yintercept = estimate), lty = 2, size = 1, color = "gray60") +
+  scale_x_continuous(breaks = seq(0,1,0.1)) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  ggthemes::theme_hc() +
+  theme(strip.background = element_rect(fill = custom_palette[4], linewidth = 1, color = "white"))
+  # annotate(geom = "rect", xmin = -Inf, xmax = Inf,
+  #          ymin = filter(models, model == "lm", str_detect(term, "expense"))[["conf.low"]],
+  #          ymax = filter(models, model == "lm", str_detect(term, "expense"))[["conf.high"]],
+  #          alpha = 0.25, fill = custom_palette[3])
+
+
+
+>>>>>>> aa3db4fa9f476c3ebbfd6462fd3763520bc4c636
 
 
 

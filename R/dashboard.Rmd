@@ -27,6 +27,7 @@ library(here)
 library(ggdist)
 library(shiny)
 library(gt)
+library(gtExtras)
 
 custom_palette <- c("#192D45", "#748CDB", "#163B88", "#C1DFF9")
 

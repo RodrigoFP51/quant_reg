@@ -29,10 +29,7 @@ higher costs than 2-year (Associates) programs.
 dollars, while fees/tuition costs are much more spread (higher standard
 deviation) but with a lower median than the former.
 
-<figure>
-<img src="img/eda.PNG" alt="Exploratory Data Analysis" />
-<figcaption aria-hidden="true">Exploratory Data Analysis</figcaption>
-</figure>
+![](img/eda.PNG)
 
 ## Quantile Regression Analysis
 
@@ -50,7 +47,4 @@ deviation) but with a lower median than the former.
   out-of-state college don’t have too much difference in costs compared
   to the private colleges.
 
-<figure>
-<img src="img/qr.PNG" alt="Quantile Regression Plot" />
-<figcaption aria-hidden="true">Quantile Regression Plot</figcaption>
-</figure>
+![](img/qr.PNG)

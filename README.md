@@ -25,9 +25,14 @@ Regarding the distributions, we can see that:
 public in-state have the lowest median and a bimodal distribution.  
 - As expected, college that offer mainly 4-year (Bachelor) programs have
 higher costs than 2-year (Associates) programs.  
-- The room/board expenses are much more concentrated in \$10,000 to
-20,000 thousands dollars, while fees/tuition costs are much more spread
-(higher standard deviation) but with a lower median than the former.
+- The room/board expenses are much more concentrated in 10,000 to 20,000
+dollars, while fees/tuition costs are much more spread (higher standard
+deviation) but with a lower median than the former.
+
+<figure>
+<img src="img/eda.PNG" alt="Exploratory Data Analysis" />
+<figcaption aria-hidden="true">Exploratory Data Analysis</figcaption>
+</figure>
 
 ## Quantile Regression Analysis
 
@@ -44,3 +49,8 @@ higher costs than 2-year (Associates) programs.
   than the private ones. The plot also shows that cheaper public
   out-of-state college don’t have too much difference in costs compared
   to the private colleges.
+
+<figure>
+<img src="img/qr.PNG" alt="Quantile Regression Plot" />
+<figcaption aria-hidden="true">Quantile Regression Plot</figcaption>
+</figure>

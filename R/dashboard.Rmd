@@ -46,9 +46,6 @@ summarize_data <- function(data){
               .groups     = "drop")
 }
 
-## 
-##
-
 ```
 
 ```{css, echo=FALSE}
@@ -152,14 +149,6 @@ plots <- data %>%
   select(state, total_cost) %>% 
   nest(data = -state) %>% 
   mutate(data = map(data, \(x) pull(x)))
-  # nest(data = -(state)) %>% 
-  # mutate(data = map(data, \(x) {
-  #   x %>%
-  #     group_by(year) %>%
-  #     summarize_data() %>% 
-  #     pull(total_cost)
-  # }
-  # ))
 
 my_cols <- colorRampPalette(c("#c993fa", "#8312eb"))
 
@@ -199,6 +188,62 @@ data %>%
 
 # Regression Analysis
 
+## Column {.sidebar data-width="200"}
+
+```{r}
+selectInput("terms",
+            label = "Choose a variable",
+            choices = c("Type" = "type",
+                        "Length" = "length",
+                        "Expense" = "expense"),
+            selected = "length")
+```
+
+## Column 
+
+```{r}
+filter_coef <- function(coef){
+  models %>% 
+    filter(str_detect(term, coef))
+}
+
+plot_coef <- function(coef){
+  
+  filter_coef(coef) %>% 
+  ggplot(aes(tau, estimate)) + 
+  geom_point() + 
+  geom_hline(data = models %>% filter(model == "lm", 
+                                      str_detect(term, coef)), 
+             aes(yintercept = estimate), 
+             lty = 2,
+             linewidth = 1,
+             color = custom_palette[3]) +
+  geom_line(linewidth = 1,
+            color = custom_palette[3]) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
+              alpha = 0.25,
+              color = custom_palette[2],
+              fill = custom_palette[2]) +
+  scale_x_continuous(breaks = seq(0,1,0.1)) +
+  scale_y_continuous(labels = scales::dollar_format(scale = 1e-3,
+                                                    suffix = "K")) +
+  labs(x='Quantile', y='Estimate',
+       title = "Quantitle Regression Coefficients",
+       subtitle = "Dashed line indicates linear regression coefficient") +
+  ggthemes::theme_hc() +
+  theme(
+    strip.background = element_rect(fill = custom_palette[4], linewidth = 1),
+    strip.text = element_text(face = "bold", color = custom_palette[1]),
+    plot.title = element_text(colour = custom_palette[1], hjust = 0.5),
+    plot.subtitle = element_text(colour = custom_palette[1], hjust = 0.5)
+  )
+}
+
+
+
+```
+
+
 ```{r}
 lm_mod <- data %>% 
   mutate(type = fct_relevel(type, "Private")) %>% 
@@ -222,41 +267,25 @@ models <- tidy(qr) %>%
               select(term, estimate, conf.low, conf.high) %>%
               mutate(model = "lm")) 
 
+
+
 renderPlot({
-  models %>%
-  ggplot(aes(tau, estimate)) +
-  facet_wrap(vars(term),
-             scales = "free", 
-             ncol = 2) +
-  geom_point(size = 1.8, 
-             color = custom_palette[3]) +
-  geom_line(linewidth = 1,
-            color = custom_palette[3]) +
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
-              alpha = 0.25,
-              color = custom_palette[2], 
-              fill = custom_palette[2]) +
-  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "length")),
-             aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3]) +
-  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "expense")),
-             aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3]) +
-  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "In-State")),
-             aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3]) +
-  geom_hline(data = models %>% filter(model == "lm", str_detect(term, "Out-of-State")),
-             aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3]) +
-  scale_x_continuous(breaks = seq(0,1,0.1)) +
-  scale_y_continuous(labels = scales::dollar_format(scale = 1e-3, suffix = "K")) +
-  labs(x='Quantile', y='Estimate',
-       title = "Quantitle Regression Coefficients",
-       subtitle = "Dashed line indicates linear regression coefficient") +
-  ggthemes::theme_hc() +
-  theme(
-    strip.background = element_rect(fill = custom_palette[4], linewidth = 1),
-    strip.text = element_text(face = "bold", color = custom_palette[1]),
-    plot.title = element_text(colour = custom_palette[1], hjust = 0.5),
-    plot.subtitle = element_text(colour = custom_palette[1], hjust = 0.5)
-    )
+  
+  if(unique(filter_coef(input$terms)$term > 1)){
+    plot_coef(input$terms) +
+    facet_wrap(vars(term), scales = "free", ncol = 2) +
+    geom_hline(data = models %>% filter(model == "lm", str_detect(term, "In-State")),
+               aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3]) +
+    geom_hline(data = models %>% filter(model == "lm", str_detect(term, "Out-of-State")),
+               aes(yintercept = estimate), lty = 2, size = 1, color = custom_palette[3])
+  } else {
+    plot_coef(input$terms)
+  }
+  
 })
 
+
+
 ```
+
 
